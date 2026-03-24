@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -21,9 +22,9 @@ public class StudentProfileController {
     @Autowired
     private ExcelService excelService;
     @PostMapping("/createProfile")
-    public StudentProfile createStudentProfile(@RequestBody StudentProfile studentProfile) {
+    public StudentProfile createStudentProfile(@RequestBody StudentProfile studentProfile) throws IOException {
         // store in Excel
-        return excelService.saveStudentProfile();
+        return excelService.saveStudentProfile(studentProfile);
     }
 
     @PutMapping("/updateProfile/{studentId}")
