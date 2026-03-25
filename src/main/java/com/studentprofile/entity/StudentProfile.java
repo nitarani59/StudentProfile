@@ -1,9 +1,5 @@
 package com.studentprofile.entity;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 public class StudentProfile {
     private Long studentId;
     private String studentName;

@@ -22,27 +22,19 @@ public class ExcelServiceImpl implements ExcelService {
 
     @Override
     public StudentProfile saveStudentProfile(StudentProfile studentProfile) throws IOException {
+
         Workbook workbook;
         Sheet sheet;
         File file = new File(filePath);
         if (file.exists() && file.length() > 0) {
             workbook = WorkbookFactory.create(file);
             sheet = workbook.getSheet("studentProfile");
-            if (Objects.isNull(sheet)) {
-                System.out.println("sheet is null");
-                sheet = workbook.createSheet("studentProfile");
-                Row row = sheet.createRow(0);
-                row.createCell(0).setCellValue("studentId");
-                row.createCell(1).setCellValue("studentName");
-                row.createCell(2).setCellValue("age");
-                row.createCell(3).setCellValue("email");
-                row.createCell(4).setCellValue("course");
-            }
+            // Validating StudentId
+            // Throw exception if student id already exists
+            validateStudentId(sheet, studentProfile.getStudentId());
         } else {
-            System.out.println("inside else");
             workbook = new XSSFWorkbook();
             sheet = workbook.createSheet("studentProfile");
-            System.out.println(file.getAbsolutePath());
             Row row = sheet.createRow(0);
             row.createCell(0).setCellValue("studentId");
             row.createCell(1).setCellValue("studentName");
@@ -80,6 +72,7 @@ public class ExcelServiceImpl implements ExcelService {
         if (file.exists() && file.length() > 0) {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheet("studentProfile");
+            checkIfStudentNotExist(sheet, studentId);
             int totalRows = sheet.getLastRowNum();
             // Since I already know that at index 0 studentId is present in the sheet.
             // That's why skipping studentId column checking
@@ -123,7 +116,6 @@ public class ExcelServiceImpl implements ExcelService {
         if (file.exists() && file.length() > 0) {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheet("studentProfile");
-            Row header = sheet.getRow(0);
             int totalRows = sheet.getLastRowNum();
             List<StudentProfile> students = new ArrayList<>();
             for (int i = 1; i <= totalRows; i++) {
@@ -149,7 +141,7 @@ public class ExcelServiceImpl implements ExcelService {
         if (file.exists() && file.length() > 0) {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheet("studentProfile");
-            Row header = sheet.getRow(0);
+            checkIfStudentNotExist(sheet, studentId);
             int totalRows = sheet.getLastRowNum();
             StudentProfile student = new StudentProfile();
             // Since I already know that at index 0 studentId is present in the sheet.
@@ -179,10 +171,9 @@ public class ExcelServiceImpl implements ExcelService {
         if (file.exists() && file.length() > 0) {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheet("studentProfile");
+            checkIfStudentNotExist(sheet, studentId);
             Row header = sheet.getRow(0);
             int totalRows = sheet.getLastRowNum();
-            int totalColumns = header.getLastCellNum();
-            StudentProfile student = new StudentProfile();
             // Since I already know that at index 0 studentId is present in the sheet.
             // That's why skipping studentId column checking
             for (int i = 1; i <= totalRows; i++) {
@@ -209,5 +200,26 @@ public class ExcelServiceImpl implements ExcelService {
             }
             workbook.close();
         }
+    }
+
+    private void validateStudentId(Sheet sheet, Long studentId) {
+        int totalRows = sheet.getLastRowNum();
+        for (int i = 1; i <= totalRows; i++) {
+            Row row = sheet.getRow(i);
+            if (studentId == row.getCell(0).getNumericCellValue()) {
+                throw new RuntimeException("Student Id " + studentId + "  already exist.");
+            }
+        }
+    }
+
+    private void checkIfStudentNotExist(Sheet sheet, Long studentId) {
+        int totalRows = sheet.getLastRowNum();
+        for (int i = 1; i <= totalRows; i++) {
+            Row row = sheet.getRow(i);
+            if (studentId == row.getCell(0).getNumericCellValue()) {
+                return;
+            }
+        }
+        throw new RuntimeException("Student id " + studentId + " not exist");
     }
 }
