@@ -28,25 +28,25 @@ public class StudentProfileController {
     }
 
     @PutMapping("/updateProfile/{studentId}")
-    public StudentProfile updateStudentProfile(@RequestBody StudentProfile studentProfile, Long studentId) {
+    public String updateStudentProfile(@RequestBody StudentProfile studentProfile, @PathVariable Long studentId) throws IOException {
         // update in excel
-        return excelService.updateStudentProfile(studentId);
+        return excelService.updateStudentProfile(studentProfile, studentId);
     }
 
     @GetMapping("/getAllProfile")
-    public List<StudentProfile> getAllStudentProfile() {
+    public List<StudentProfile> getAllStudentProfile() throws IOException {
         // fetch all student profile
         return excelService.fetchAllStudentProfile();
     }
 
-    @GetMapping("/getProfile")
-    public StudentProfile getStudentProfile(@PathVariable Long studentId) {
+    @GetMapping("/getProfile/{studentId}")
+    public StudentProfile getStudentProfile(@PathVariable Long studentId) throws IOException {
         // fetch student profile by studentId
         return excelService.fetchStudentProfile(studentId);
     }
 
-    @DeleteMapping("/deleteProfile")
-    public void deleteStudentprofile(@PathVariable Long studentId) {
+    @DeleteMapping("/deleteProfile/{studentId}")
+    public void deleteStudentprofile(@PathVariable Long studentId) throws IOException {
         // delete student profile by studentId
         excelService.deleteStudentProfile(studentId);
     }

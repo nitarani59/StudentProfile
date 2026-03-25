@@ -12,12 +12,14 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Service
 public class ExcelServiceImpl implements ExcelService {
     String filePath = "studentprofile.xlsx";
+
     @Override
     public StudentProfile saveStudentProfile(StudentProfile studentProfile) throws IOException {
         Workbook workbook;
@@ -36,8 +38,7 @@ public class ExcelServiceImpl implements ExcelService {
                 row.createCell(3).setCellValue("email");
                 row.createCell(4).setCellValue("course");
             }
-        }
-        else {
+        } else {
             System.out.println("inside else");
             workbook = new XSSFWorkbook();
             sheet = workbook.createSheet("studentProfile");
@@ -74,22 +75,139 @@ public class ExcelServiceImpl implements ExcelService {
     }
 
     @Override
-    public StudentProfile updateStudentProfile(Long studentId) {
+    public String updateStudentProfile(StudentProfile student, Long studentId) throws IOException {
+        File file = new File("studentprofile.xlsx");
+        if (file.exists() && file.length() > 0) {
+            Workbook workbook = WorkbookFactory.create(file);
+            Sheet sheet = workbook.getSheet("studentProfile");
+            int totalRows = sheet.getLastRowNum();
+            // Since I already know that at index 0 studentId is present in the sheet.
+            // That's why skipping studentId column checking
+            for (int i = 1; i <= totalRows; i++) {
+                Row row = sheet.getRow(i);
+                long cellValue = (long) row.getCell(0).getNumericCellValue();
+                if (cellValue == studentId) {
+                    if (Objects.nonNull(student.getStudentName())) {
+                        row.getCell(1).setCellValue(student.getStudentName());
+                    }
+                    if (Objects.nonNull(student.getAge())) {
+                        row.getCell(2).setCellValue(student.getAge());
+                    }
+                    if (Objects.nonNull(student.getEmailId())) {
+                        row.getCell(3).setCellValue(student.getEmailId());
+                    }
+                    if (Objects.nonNull(student.getCourse())) {
+                        row.getCell(4).setCellValue(student.getCourse());
+                    }
+                    // creating & storing in temporary file to prevent corruption
+                    File tempFile = new File("temp.xlsx");
+                    try(FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+                        workbook.write(fileOutputStream);
+                    }
+                    workbook.close();
+                    if (file.exists()) {
+                        file.delete();
+                    }
+                    tempFile.renameTo(file);
+                    return "Updated Successfully";
+                }
+            }
+            workbook.close();
+        }
         return null;
     }
 
     @Override
-    public List<StudentProfile> fetchAllStudentProfile() {
-        return List.of();
-    }
+    public List<StudentProfile> fetchAllStudentProfile() throws IOException {
+        File file = new File("studentprofile.xlsx");
+        if (file.exists() && file.length() > 0) {
+            Workbook workbook = WorkbookFactory.create(file);
+            Sheet sheet = workbook.getSheet("studentProfile");
+            Row header = sheet.getRow(0);
+            int totalRows = sheet.getLastRowNum();
+            List<StudentProfile> students = new ArrayList<>();
+            for (int i = 1; i <= totalRows; i++) {
+                StudentProfile student = new StudentProfile();
+                Row row = sheet.getRow(i);
+                student.setStudentId((long) row.getCell(0).getNumericCellValue());
+                student.setStudentName(row.getCell(1).getStringCellValue());
+                student.setAge((int) row.getCell(2).getNumericCellValue());
+                student.setEmailId(row.getCell(3).getStringCellValue());
+                student.setCourse(row.getCell(4).getStringCellValue());
 
-    @Override
-    public StudentProfile fetchStudentProfile(Long studentId) {
+                students.add(student);
+            }
+            workbook.close();
+            return students;
+        }
         return null;
     }
 
     @Override
-    public void deleteStudentProfile(Long studentId) {
+    public StudentProfile fetchStudentProfile(Long studentId) throws IOException {
+        File file = new File("studentprofile.xlsx");
+        if (file.exists() && file.length() > 0) {
+            Workbook workbook = WorkbookFactory.create(file);
+            Sheet sheet = workbook.getSheet("studentProfile");
+            Row header = sheet.getRow(0);
+            int totalRows = sheet.getLastRowNum();
+            StudentProfile student = new StudentProfile();
+            // Since I already know that at index 0 studentId is present in the sheet.
+            // That's why skipping studentId column checking
+            for (int i = 1; i <= totalRows; i++) {
+                Row row = sheet.getRow(i);
+                long cellValue = (long) row.getCell(0).getNumericCellValue();
+                if (cellValue == studentId) {
+                    student.setStudentId((long) row.getCell(0).getNumericCellValue());
+                    student.setStudentName(row.getCell(1).getStringCellValue());
+                    student.setAge((int) row.getCell(2).getNumericCellValue());
+                    student.setEmailId(row.getCell(3).getStringCellValue());
+                    student.setCourse(row.getCell(4).getStringCellValue());
 
+                    workbook.close();
+                    return student;
+                }
+            }
+            workbook.close();
+        }
+        return null;
+    }
+
+    @Override
+    public void deleteStudentProfile(Long studentId) throws IOException {
+        File file = new File("studentprofile.xlsx");
+        if (file.exists() && file.length() > 0) {
+            Workbook workbook = WorkbookFactory.create(file);
+            Sheet sheet = workbook.getSheet("studentProfile");
+            Row header = sheet.getRow(0);
+            int totalRows = sheet.getLastRowNum();
+            int totalColumns = header.getLastCellNum();
+            StudentProfile student = new StudentProfile();
+            // Since I already know that at index 0 studentId is present in the sheet.
+            // That's why skipping studentId column checking
+            for (int i = 1; i <= totalRows; i++) {
+                Row row = sheet.getRow(i);
+                long cellValue = (long) row.getCell(0).getNumericCellValue();
+                if (cellValue == studentId) {
+                    sheet.removeRow(row);
+                    // Observed that after removing row a gap is getting created, to avoid it shifting of rows needed
+                    if (i < totalRows) {
+                        sheet.shiftRows(i + 1, totalRows, -1);
+                    }
+                    // To prevent file corruption writing to temporary file
+                    File tempFile = new File("temp.xlsx");
+                    try (FileOutputStream fileOutputStream = new FileOutputStream(tempFile)) {
+                        workbook.write(fileOutputStream);
+                    }
+                    workbook.close();
+                    if (file.exists()) {
+                        file.delete();
+                    }
+                    tempFile.renameTo(file);
+                    return;
+                }
+            }
+            workbook.close();
+        }
     }
 }
