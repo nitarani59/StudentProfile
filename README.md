@@ -24,7 +24,7 @@ All data is stored in an **Excel file (`.xlsx`)** using Apache POI.
 
 ---
 ## 🔗 API Endpoints
-
+## Positive Scenarios
 ### ➤ Create Student
 
 **POST** `http://localhost:8080/v1/createProfile`
@@ -148,6 +148,171 @@ Updated Successfully
 **DELETE** `http://localhost:8080/v1/deleteProfile/9`
 
 ---
+
+## Negative Scenarios
+
+---
+
+### ➤ Duplicate Student ID
+
+**POST** `http://localhost:8080/v1/createProfile`
+
+**Scenario:** Creating student with existing `studentId`
+
+Response Body:
+
+```json
+{
+  "errorCode": "400 BAD_REQUEST",
+  "errorMessage": "Student Id 8 already exist."
+}
+```
+
+---
+
+### ➤ Student Not Found (Get by ID)
+
+**GET** `http://localhost:8080/v1/getProfile/100`
+
+**Scenario:** Student ID does not exist
+
+Response Body:
+
+```json
+{
+  "errorCode": "400 BAD_REQUEST",
+  "errorMessage": "Student id 100 not exist"
+}
+```
+
+---
+
+### ➤ Student Not Found (Update)
+
+**PUT** `http://localhost:8080/v1/updateProfile/100`
+
+**Scenario:** Updating non-existing student
+
+Response Body:
+
+```json
+{
+  "errorCode": "400 BAD_REQUEST",
+  "errorMessage": "Student id 100 not exist"
+}
+```
+
+---
+
+### ➤ Student Not Found (Delete)
+
+**DELETE** `http://localhost:8080/v1/deleteProfile/100`
+
+**Scenario:** Deleting non-existing student
+
+Response Body:
+
+```json
+{
+  "errorCode": "400 BAD_REQUEST",
+  "errorMessage": "Student id 100 not exist"
+}
+```
+
+---
+
+### ➤ Invalid Request Body
+
+**POST** `http://localhost:8080/v1/createProfile`
+
+**Scenario:** Missing required fields 'Student Name'
+
+Request Body:
+
+```json
+{
+  "studentId": 94,
+  "age":22,
+  "emailId":"nitarani440@gmail.com",
+  "course":"Btech"
+}
+```
+
+Response Body:
+
+```json
+{
+  "errorCode": "400 BAD_REQUEST",
+  "errorMessage": "Student Name is required"
+}
+```
+
+---
+
+### ➤ Excel File Open During Operation
+
+**Scenario:** Excel file is open while API is writing
+
+Response:
+
+```json
+{
+  "errorCode": "400 BAD_REQUEST",
+  "errorMessage": "C:\\SpringBoot-Project\\StudentProfile\\studentprofile.xlsx (The process cannot access the file because it is being used by another process)"
+}
+```
+
+---
+
+### ➤ Invalid Email Id
+
+**Scenario:** Provided email id is invalid
+
+Request Body
+
+```json
+{
+    "studentId": 92,
+    "studentName":"Jai Prakash",
+    "age":22,
+    "emailId":"nitarani440",
+    "course":"Btech"
+}
+```
+Response:
+
+```json
+{
+  "errorCode": "400 BAD_REQUEST",
+  "errorMessage": "Invalid email format"
+}
+```
+
+### ➤ Student id is null
+
+**Scenario:** Provided null for non-null field
+
+Request Body
+
+```json
+{
+  "studentId": null,
+  "studentName":"Jai Prakash",
+  "age":22,
+  "emailId":"nitarani440@gmail.com",
+  "course":"Btech"
+}
+```
+Response:
+
+```json
+{
+  "errorCode": "400 BAD_REQUEST",
+  "errorMessage": "JSON parse error: studentId is marked non-null but is null"
+}
+```
+---
+
 ## ▶️ How to Run
 
 1. Clone the project

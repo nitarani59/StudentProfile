@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -15,13 +16,15 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class ExcelServiceImpl implements ExcelService {
-    String filePath = "studentprofile.xlsx";
+    @Value("${file.path.name}")
+    private String filePath;
 
     @Override
-    public StudentProfile saveStudentProfile(StudentProfile studentProfile) throws IOException {
+    public Optional<StudentProfile> saveStudentProfile(StudentProfile studentProfile) throws IOException {
 
         Workbook workbook;
         Sheet sheet;
@@ -63,12 +66,12 @@ public class ExcelServiceImpl implements ExcelService {
 
         tempFile.renameTo(file);
 
-        return studentProfile;
+        return Optional.of(studentProfile);
     }
 
     @Override
-    public String updateStudentProfile(StudentProfile student, Long studentId) throws IOException {
-        File file = new File("studentprofile.xlsx");
+    public Optional<String> updateStudentProfile(StudentProfile student, Long studentId) throws IOException {
+        File file = new File(filePath);
         if (file.exists() && file.length() > 0) {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheet("studentProfile");
@@ -102,17 +105,17 @@ public class ExcelServiceImpl implements ExcelService {
                         file.delete();
                     }
                     tempFile.renameTo(file);
-                    return "Updated Successfully";
+                    return Optional.of("Updated Successfully");
                 }
             }
             workbook.close();
         }
-        return null;
+        throw new RuntimeException("Student Profile file does not exist");
     }
 
     @Override
-    public List<StudentProfile> fetchAllStudentProfile() throws IOException {
-        File file = new File("studentprofile.xlsx");
+    public Optional<List<StudentProfile>> fetchAllStudentProfile() throws IOException {
+        File file = new File(filePath);
         if (file.exists() && file.length() > 0) {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheet("studentProfile");
@@ -130,14 +133,16 @@ public class ExcelServiceImpl implements ExcelService {
                 students.add(student);
             }
             workbook.close();
-            return students;
+            return Optional.of(students);
         }
-        return null;
+        // In case file not exist, that means no student profile created yet.
+        // That's why returning empty list instead of null.
+        return Optional.of(new ArrayList<>());
     }
 
     @Override
-    public StudentProfile fetchStudentProfile(Long studentId) throws IOException {
-        File file = new File("studentprofile.xlsx");
+    public Optional<StudentProfile> fetchStudentProfile(Long studentId) throws IOException {
+        File file = new File(filePath);
         if (file.exists() && file.length() > 0) {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheet("studentProfile");
@@ -157,17 +162,17 @@ public class ExcelServiceImpl implements ExcelService {
                     student.setCourse(row.getCell(4).getStringCellValue());
 
                     workbook.close();
-                    return student;
+                    return Optional.of(student);
                 }
             }
             workbook.close();
         }
-        return null;
+        throw new RuntimeException("Student Profile file does not exist.");
     }
 
     @Override
     public void deleteStudentProfile(Long studentId) throws IOException {
-        File file = new File("studentprofile.xlsx");
+        File file = new File(filePath);
         if (file.exists() && file.length() > 0) {
             Workbook workbook = WorkbookFactory.create(file);
             Sheet sheet = workbook.getSheet("studentProfile");
@@ -200,6 +205,7 @@ public class ExcelServiceImpl implements ExcelService {
             }
             workbook.close();
         }
+        throw new RuntimeException("Student Profile file does not exist.");
     }
 
     private void validateStudentId(Sheet sheet, Long studentId) {
